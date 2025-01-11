@@ -90,9 +90,16 @@
   </div>
 
   <script>
+    const taskList = document.getElementById('taskList');
+
+    // Load tasks from localStorage on page load
+    window.onload = function () {
+      const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      tasks.forEach(task => renderTask(task.text, task.done));
+    };
+
     function addTask() {
       const taskInput = document.getElementById('taskInput');
-      const taskList = document.getElementById('taskList');
       const taskText = taskInput.value.trim();
 
       if (taskText === '') {
@@ -100,12 +107,21 @@
         return;
       }
 
+      renderTask(taskText, false);
+      saveTask(taskText, false);
+
+      taskInput.value = '';
+    }
+
+    function renderTask(text, isDone) {
       const listItem = document.createElement('li');
 
       const taskSpan = document.createElement('span');
-      taskSpan.textContent = taskText;
+      taskSpan.textContent = text;
+      if (isDone) taskSpan.classList.add('done');
       taskSpan.onclick = function () {
         this.classList.toggle('done');
+        updateTaskStatus(text, this.classList.contains('done'));
       };
 
       const deleteButton = document.createElement('button');
@@ -113,13 +129,32 @@
       deleteButton.className = 'delete';
       deleteButton.onclick = function () {
         taskList.removeChild(listItem);
+        deleteTask(text);
       };
 
       listItem.appendChild(taskSpan);
       listItem.appendChild(deleteButton);
       taskList.appendChild(listItem);
+    }
 
-      taskInput.value = '';
+    function saveTask(text, isDone) {
+      const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      tasks.push({ text, done: isDone });
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function updateTaskStatus(text, isDone) {
+      const tasks = JSON.parse(localStorage.getItem('tasks'));
+      const updatedTasks = tasks.map(task =>
+        task.text === text ? { text: task.text, done: isDone } : task
+      );
+      localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    }
+
+    function deleteTask(text) {
+      const tasks = JSON.parse(localStorage.getItem('tasks'));
+      const updatedTasks = tasks.filter(task => task.text !== text);
+      localStorage.setItem('tasks', JSON.stringify(updatedTasks));
     }
   </script>
 </body>
